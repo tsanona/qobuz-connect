@@ -13,6 +13,7 @@ exclude = ["/tools", "/docs", "/.github", "/proto", "/build.rs", "/justfile"]
 
 [features]
 discovery = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-util", "dep:mdns-sd"]
+json = []
 
 [package.metadata.docs.rs]
 all-features = true
@@ -36,8 +37,10 @@ tokio = { version = "1", features = ["macros", "net", "rt", "sync", "time"] }
 tokio-tungstenite = { version = "0.30", features = ["rustls-tls-webpki-roots"] }
 tracing = "0.1"
 uuid = { version = "1", features = ["v4"] }
+pbjson = "0.9"
 
 [build-dependencies]
+pbjson-build = "0.9"
 prost-build = "0.14"
 protox = "0.9"
 
