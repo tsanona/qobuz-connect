@@ -2,7 +2,6 @@
 
 A rust integration of the Qobuz Connect protocol. Devices appear in the device picker of the offical apps, and no LAN involved.
 
-Schema and behaviour were lifted from the web player. 
 The crate is not affiliated with Qobuz.
 
 ## Usage
@@ -32,7 +31,7 @@ Behind the `discovery` feature, `Discovery::start` advertises a device on a port
 
 ## Examples
 
-All take `QOBUZ_CONNECT_ENDPOINT` and `QOBUZ_CONNECT_JWT`, which `token` produces from `QOBUZ_APP_ID` and `QOBUZ_USER_AUTH_TOKEN` (you can use the webapp requests to get yours):
+All take `QOBUZ_CONNECT_ENDPOINT` and `QOBUZ_CONNECT_JWT`, which `token` produces from `QOBUZ_APP_ID` and `QOBUZ_USER_AUTH_TOKEN`:
 
 ```
 eval "$(cargo run -q --example token | sh | cargo run -q --example token)"
