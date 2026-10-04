@@ -10,9 +10,3 @@ python3 schema_tools.py gen schema.json qonductor.json ../../proto overrides.jso
 ```
 
 `extract_schema.py` scans the bundle for message objects with `encode` and `decode` members, reads field numbers, wire types, presence and repetition from each `encode` body, and resolves enum-typed fields through the `toJSON` helpers. `overrides.json` fixes the names of nested messages that the envelope does not name and renames the message type enum so prost strips the `MESSAGE_TYPE_` prefix.
-
-Regenerate the Rust code in `src/proto/` with prost-build and protox (no system protoc needed):
-
-```
-just regenerate
-```
