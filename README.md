@@ -47,8 +47,7 @@ One token per process: two sockets sharing one evict each other.
 ## Schema
 
 `proto/qcloud.proto` is the outer frame of the cloud socket, `proto/qconnect.proto` the Qobuz Connect messages inside its payloads, both lifted from the web player so field numbers and enum values match the apps
-`src/proto/` is prost output; `just regenerate` rebuilds it with protox
-`docs/schema-diff.md` lists where the schema departs from the qonductor crate (used originally as the starting point)
+`src/proto/` is prost output;`docs/schema-diff.md` lists where the schema departs from the qonductor crate (used originally as the starting point)
 
 ## Disclaimer
 - This repo is not affiliated with Qobuz.

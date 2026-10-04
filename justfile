@@ -12,9 +12,5 @@ clippy:
 test:
     cargo test
 
-regenerate:
-    cargo run --manifest-path tools/regen/Cargo.toml
-    cargo fmt
-
 publish-check:
     cargo publish --dry-run
