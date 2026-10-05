@@ -1,9 +1,14 @@
 #![allow(clippy::all, clippy::pedantic, clippy::restriction)]
 //! Message types generated from `proto/qcloud.proto` and `proto/qconnect.proto`.
 
-pub mod qcloud;
+pub mod qcloud {
+    include!("qcloud.rs");
+}
+
 pub mod qconnect {
     include!("qconnect.rs");
+    #[cfg(feature = "clap")]
+    include!("qconnect.clap.rs");
 
     impl From<std::time::Duration> for Position {
         fn from(value: std::time::Duration) -> Self {
