@@ -20,7 +20,7 @@ pub use device::Device;
 pub use discovery::{Discovery, Handover};
 pub use error::Error;
 pub use event::{Event, QueueEvent, RendererEvent, SessionState};
-pub use renderer::{PlayerState, RendererCommand, RendererReport};
+pub use renderer::{PlayerState, RendererCommand, RendererReport, StateChange};
 pub use session::Session;
 pub use token::{TOKEN_URL, TokenRequest};
 pub use transport::{Credentials, Event as TransportEvent, Transport};
