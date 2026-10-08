@@ -53,17 +53,22 @@ impl PlayerState {
     }
 }
 
+/// State delta of [`RendererCommand::SetState`]
+/// Absent fields are unchanged: a track means jump to it (from `position` or the start, playing unless told otherwise), otherwise `position` is a seek and `playing` a play or pause; a track with a negative queue item id means stop.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StateChange {
+    pub playing: Option<PlayingState>,
+    pub position: Option<Duration>,
+    pub current: Option<QueueTrackRef>,
+    pub next: Option<QueueTrackRef>,
+}
+
 /// A command the cloud sends to this renderer.
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub enum RendererCommand {
     /// Absent fields are unchanged: a track means jump to it (from `position` or the start, playing unless told otherwise), otherwise `position` is a seek and `playing` a play or pause; a track with a negative queue item id means stop.
-    SetState {
-        playing: Option<PlayingState>,
-        position: Option<Duration>,
-        current: Option<QueueTrackRef>,
-        next: Option<QueueTrackRef>,
-    },
+    SetState(StateChange),
     SetVolume(u32),
     ChangeVolume(i32),
     Mute(bool),
@@ -76,17 +81,14 @@ pub enum RendererCommand {
 impl RendererCommand {
     pub(crate) fn from_message(message: &QConnectMessage) -> Option<Self> {
         match message.message_type() {
-            MessageType::SrvrRndrSetState => {
-                message
-                    .srvr_rndr_set_state
-                    .as_ref()
-                    .map(|s| Self::SetState {
-                        playing: playing(s.playing_state),
-                        position: s.current_position.map(millis_to_duration),
-                        current: s.current_track.clone(),
-                        next: s.next_track.clone(),
-                    })
-            }
+            MessageType::SrvrRndrSetState => message.srvr_rndr_set_state.as_ref().map(|s| {
+                Self::SetState(StateChange {
+                    playing: playing(s.playing_state),
+                    position: s.current_position.map(millis_to_duration),
+                    current: s.current_track.clone(),
+                    next: s.next_track.clone(),
+                })
+            }),
             MessageType::SrvrRndrSetVolume => message.srvr_rndr_set_volume.as_ref().and_then(|v| {
                 match (v.volume, v.volume_delta) {
                     (Some(volume), _) => Some(Self::SetVolume(volume)),
@@ -310,12 +312,12 @@ mod tests {
             }),
             ..Default::default()
         };
-        let expected = RendererCommand::SetState {
+        let expected = RendererCommand::SetState(StateChange {
             playing: None,
             position: None,
             current: None,
             next: None,
-        };
+        });
         assert_eq!(RendererCommand::from_message(&message), Some(expected));
     }
 }

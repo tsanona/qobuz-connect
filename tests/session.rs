@@ -12,6 +12,7 @@ use qobuz_connect::proto::qconnect::{
 };
 use qobuz_connect::{
     Device, Error, Event, PlayerState, RendererCommand, RendererReport, Session, SessionState,
+    StateChange,
 };
 use tokio::sync::mpsc;
 
@@ -130,12 +131,12 @@ async fn commands_arrive_typed_and_reports_carry_the_queue_version() {
     };
     send(&mut server, vec![set_state]).await;
 
-    let expected = RendererCommand::SetState {
+    let expected = RendererCommand::SetState(StateChange {
         playing: Some(PlayingState::Playing),
         position: Some(Duration::from_secs(5)),
         current: Some(track),
         next: None,
-    };
+    });
     assert_eq!(session.recv().await, Some(Event::Command(expected)));
 
     let state = PlayerState {

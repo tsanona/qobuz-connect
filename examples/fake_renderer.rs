@@ -5,7 +5,7 @@ use qobuz_connect::proto::qconnect::{
     AudioQuality, BufferState, DeviceType, NetworkType, PlayingState,
 };
 use qobuz_connect::{
-    Credentials, Device, Event, PlayerState, RendererCommand, RendererReport, Session,
+    Credentials, Device, Event, PlayerState, RendererCommand, RendererReport, Session, StateChange,
 };
 
 struct Fake {
@@ -72,14 +72,9 @@ fn handle(
 ) -> Result<(), qobuz_connect::Error> {
     match event {
         Event::Registered { .. } if activate => session.activate(),
-        Event::Command(RendererCommand::SetState {
-            playing,
-            position,
-            current,
-            next,
-        }) => {
-            apply(&mut fake.state, playing, position, current);
-            if let Some(next) = next {
+        Event::Command(RendererCommand::SetState(state_change)) => {
+            apply(&mut fake.state, &state_change);
+            if let Some(next) = state_change.next {
                 fake.state.next_queue_item_id = Some(next.queue_item_id);
             }
             session.report(RendererReport::State(fake.state.clone()))
@@ -112,27 +107,22 @@ fn handle(
     }
 }
 
-fn apply(
-    state: &mut PlayerState,
-    playing: Option<PlayingState>,
-    position: Option<Duration>,
-    current: Option<qobuz_connect::proto::qconnect::QueueTrackRef>,
-) {
-    match current {
+fn apply(state: &mut PlayerState, state_change: &StateChange) {
+    match state_change.current.as_ref() {
         Some(track) if track.queue_item_id < 0 => {
             state.playing = PlayingState::Stopped;
             state.current_queue_item_id = None;
         }
         Some(track) if state.current_queue_item_id != Some(track.queue_item_id) => {
             state.current_queue_item_id = Some(track.queue_item_id);
-            state.position = position.unwrap_or(Duration::ZERO);
-            state.playing = playing.unwrap_or(PlayingState::Playing);
+            state.position = state_change.position.unwrap_or(Duration::ZERO);
+            state.playing = state_change.playing.unwrap_or(PlayingState::Playing);
         }
         _ => {
-            if let Some(position) = position {
+            if let Some(position) = state_change.position {
                 state.position = position;
             }
-            if let Some(playing) = playing {
+            if let Some(playing) = state_change.playing {
                 state.playing = playing;
             }
         }
