@@ -23,4 +23,23 @@ pub mod qconnect {
             }
         }
     }
+
+    macro_rules! implment_otional_id {
+        ($(($type:ident, $field:ident)),* $(,)?) => {
+            $(
+                impl $type {
+                    #[doc = concat!("Returns ", stringify!($field), " as Some if positive, None otherwise.")]
+                    pub fn $field(&self) -> Option<i32> {
+                        (self.$field >= 0).then_some(self.$field)
+                    }
+                }
+            )*
+        };
+    }
+
+    implment_otional_id!{
+        (RendererState, current_queue_item_id),
+        (SrvrCtrlSessionState, active_renderer_id),
+        (SrvrCtrlActiveRendererChanged, active_renderer_id)
+    }
 }

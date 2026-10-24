@@ -32,7 +32,7 @@ impl PlayerState {
             buffer: state.buffer_state(),
             position: millis_to_duration(state.current_position.as_ref().map_or(0, |p| p.value)),
             duration: millis_to_duration(state.duration),
-            current_queue_item_id: id(state.current_queue_item_id),
+            current_queue_item_id: state.current_queue_item_id(),
             next_queue_item_id: None,
         }
     }
@@ -235,10 +235,6 @@ impl RendererReport {
         message.message_type = kind.into();
         message
     }
-}
-
-pub(crate) fn id(raw: i32) -> Option<i32> {
-    (raw >= 0).then_some(raw)
 }
 
 fn playing(raw: Option<i32>) -> Option<PlayingState> {
