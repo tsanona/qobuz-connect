@@ -9,7 +9,7 @@ use crate::proto::qconnect::{
     SrvrCtrlQueueTracksAddedFromAutoplay, SrvrCtrlQueueTracksInserted, SrvrCtrlQueueTracksLoaded,
     SrvrCtrlQueueTracksRemoved, SrvrCtrlQueueTracksReordered, SrvrCtrlShuffleModeSet,
 };
-use crate::renderer::{PlayerState, RendererCommand, id};
+use crate::renderer::{PlayerState, RendererCommand};
 
 /// Snapshot of the session sent right after joining and whenever it changes.
 #[derive(Debug, Clone, PartialEq)]
@@ -172,10 +172,11 @@ pub(crate) fn from_message(message: QConnectMessage) -> Event {
         }),
         MessageType::PlaybackError => message.playback_error.map(Event::PlaybackError),
         MessageType::SrvrCtrlSessionState => message.srvr_ctrl_session_state.map(|s| {
+            let active_renderer_id = s.active_renderer_id();
             let (playing, loop_mode) = (s.playing_state(), s.loop_mode());
             Event::Session(SessionState {
                 session_uuid: s.session_uuid,
-                active_renderer_id: id(s.active_renderer_id),
+                active_renderer_id,
                 queue_version: s.queue_version,
                 playing,
                 loop_mode,
@@ -216,7 +217,7 @@ fn renderer_event(kind: MessageType, message: &QConnectMessage) -> Option<Render
             .srvr_ctrl_active_renderer_changed
             .as_ref()
             .map(|a| RendererEvent::ActiveChanged {
-                id: id(a.active_renderer_id),
+                id: a.active_renderer_id(),
             }),
         MessageType::SrvrCtrlRendererStateUpdated => message
             .srvr_ctrl_renderer_state_updated
