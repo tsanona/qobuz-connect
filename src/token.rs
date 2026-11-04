@@ -9,23 +9,20 @@ use crate::transport::Credentials;
 pub const TOKEN_URL: &str = "https://www.qobuz.com/api.json/0.2/qws/createToken";
 
 /// A token request for any HTTP client: POST `body` as `application/x-www-form-urlencoded` to `url` with `headers`, then read the response with `Credentials::from_json`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TokenRequest {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TokenRequest<'a> {
     pub url: &'static str,
-    pub headers: [(&'static str, String); 2],
+    pub headers: [(&'static str, &'a str); 2],
     pub body: &'static str,
 }
 
-impl TokenRequest {
+impl<'a> TokenRequest<'a> {
     /// Takes the app id and user auth token the Qobuz API wants on every call of a logged-in user.
     #[must_use]
-    pub fn new(app_id: &str, user_auth_token: &str) -> Self {
+    pub fn new(app_id: &'a str, user_auth_token: &'a str) -> Self {
         Self {
             url: TOKEN_URL,
-            headers: [
-                ("X-App-Id", app_id.to_owned()),
-                ("X-User-Auth-Token", user_auth_token.to_owned()),
-            ],
+            headers: [("X-App-Id", app_id), ("X-User-Auth-Token", user_auth_token)],
             body: "jwt=jwt_qws",
         }
     }

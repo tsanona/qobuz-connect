@@ -57,7 +57,7 @@ async fn main() {
             _ = ticker.tick() => {
                 if fake.state.playing == PlayingState::Playing {
                     fake.state.position = fake.state.position.saturating_add(Duration::from_secs(1));
-                    if session.report(RendererReport::State(fake.state.clone())).is_err() {
+                    if session.report(RendererReport::State(fake.state)).is_err() {
                         return;
                     }
                 }
@@ -79,7 +79,7 @@ fn handle(
             if let Some(next) = state_change.next {
                 fake.state.next_queue_item_id = Some(next.queue_item_id);
             }
-            session.report(RendererReport::State(fake.state.clone()))
+            session.report(RendererReport::State(fake.state))
         }
         Event::Command(RendererCommand::SetVolume(volume)) => {
             fake.volume = volume.min(100);
@@ -103,7 +103,7 @@ fn handle(
         }
         Event::Command(RendererCommand::SetActive(false)) => {
             fake.state.playing = PlayingState::Stopped;
-            session.report(RendererReport::State(fake.state.clone()))
+            session.report(RendererReport::State(fake.state))
         }
         _ => Ok(()),
     }

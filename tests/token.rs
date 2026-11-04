@@ -11,10 +11,7 @@ fn the_request_matches_the_web_player() {
     );
     assert_eq!(
         request.headers,
-        [
-            ("X-App-Id", "app".to_owned()),
-            ("X-User-Auth-Token", "user-token".to_owned()),
-        ]
+        [("X-App-Id", "app"), ("X-User-Auth-Token", "user-token"),]
     );
     assert_eq!(request.body, "jwt=jwt_qws");
 }
