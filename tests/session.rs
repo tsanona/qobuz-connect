@@ -2,9 +2,10 @@
 
 mod common;
 
+use std::sync::LazyLock;
 use std::time::Duration;
 
-use common::{Server, frames, listen, messages, nothing_sent, send};
+use common::{Server, frames, join, messages, nothing_sent, send};
 use qobuz_connect::proto::qconnect::{
     AudioQuality, BufferState, DeviceInfo, DeviceType, LoopMode, MessageType, PlayingState,
     QConnectMessage, QueueTrackRef, QueueVersion, SrvrCtrlAddRenderer, SrvrCtrlSessionState,
@@ -16,18 +17,16 @@ use qobuz_connect::{
 };
 use tokio::sync::mpsc;
 
-fn device() -> Device {
-    Device {
-        uuid: [7; 16],
-        name: "test renderer".to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "test".to_owned(),
-        kind: DeviceType::Speaker,
-        max_audio_quality: AudioQuality::HiresLevel3,
-        volume_remote_control: true,
-        software_version: "0".to_owned(),
-    }
-}
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
+    uuid: [7; 16],
+    name: "test renderer".to_owned(),
+    brand: "qobuz-connect".to_owned(),
+    model: "test".to_owned(),
+    kind: DeviceType::Speaker,
+    max_audio_quality: AudioQuality::HiresLevel3,
+    volume_remote_control: true,
+    software_version: "0".to_owned(),
+});
 
 fn add_renderer(renderer_id: i32, device: &Device) -> QConnectMessage {
     QConnectMessage {
@@ -58,10 +57,8 @@ fn session_state(session_uuid: [u8; 16], active_renderer_id: i32) -> QConnectMes
     }
 }
 
-async fn joined() -> (Session, Server, mpsc::Receiver<Server>) {
-    let (credentials, mut connections) = listen().await;
-    let session = Session::join(credentials, device()).await.unwrap();
-    let mut server = connections.recv().await.unwrap();
+async fn joined() -> (Session<'static>, Server, mpsc::Receiver<Server>) {
+    let (session, mut server, connections) = join(&DEVICE).await;
     frames(&mut server).await;
     let join = messages(&mut server).await;
     let sent = join
@@ -80,7 +77,7 @@ async fn joined() -> (Session, Server, mpsc::Receiver<Server>) {
 async fn registration_and_session_state_drive_the_bookkeeping() {
     let (mut session, mut server, _connections) = joined().await;
 
-    send(&mut server, vec![add_renderer(7, &device())]).await;
+    send(&mut server, vec![add_renderer(7, &DEVICE)]).await;
     assert_eq!(
         session.recv().await,
         Some(Event::Registered { renderer_id: 7 })
@@ -191,7 +188,7 @@ async fn activation_needs_a_renderer_id() {
     let (mut session, mut server, _connections) = joined().await;
     assert!(matches!(session.activate(), Err(Error::NotRegistered)));
 
-    send(&mut server, vec![add_renderer(7, &device())]).await;
+    send(&mut server, vec![add_renderer(7, &DEVICE)]).await;
     session.recv().await;
     session.activate().unwrap();
     let sent = messages(&mut server).await;
@@ -205,7 +202,7 @@ async fn activation_needs_a_renderer_id() {
 #[tokio::test]
 async fn a_reconnect_drops_what_was_queued_and_registers_again() {
     let (mut session, mut server, mut connections) = joined().await;
-    send(&mut server, vec![add_renderer(7, &device())]).await;
+    send(&mut server, vec![add_renderer(7, &DEVICE)]).await;
     session.recv().await;
     drop(server);
     assert_eq!(session.recv().await, Some(Event::Disconnected));
@@ -222,7 +219,7 @@ async fn a_reconnect_drops_what_was_queued_and_registers_again() {
     );
     nothing_sent(&mut server).await;
 
-    send(&mut server, vec![add_renderer(8, &device())]).await;
+    send(&mut server, vec![add_renderer(8, &DEVICE)]).await;
     assert_eq!(
         session.recv().await,
         Some(Event::Registered { renderer_id: 8 })

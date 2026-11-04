@@ -2,9 +2,10 @@
 
 mod common;
 
+use std::sync::LazyLock;
 use std::time::Duration;
 
-use common::{Server, frames, listen, messages, nothing_sent, send};
+use common::{Server, frames, join, messages, nothing_sent, send};
 use qobuz_connect::proto::qconnect::{
     AudioQuality, DeviceType, Error as ProtoError, LoopMode, MessageType, PlayingState,
     QConnectMessage, QueueItemRef, QueueTrack, QueueVersion, SrvrCtrlQueueErrorMessage,
@@ -13,27 +14,23 @@ use qobuz_connect::proto::qconnect::{
 use qobuz_connect::{Autoplay, ControllerCommand, Device, Event, QueueEvent, Session};
 use tokio::sync::mpsc;
 
-fn device() -> Device {
-    Device {
-        uuid: [3; 16],
-        name: "test controller".to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "test".to_owned(),
-        kind: DeviceType::Computer,
-        max_audio_quality: AudioQuality::HiresLevel3,
-        volume_remote_control: false,
-        software_version: "0".to_owned(),
-    }
-}
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
+    uuid: [3; 16],
+    name: "test controller".to_owned(),
+    brand: "qobuz-connect".to_owned(),
+    model: "test".to_owned(),
+    kind: DeviceType::Computer,
+    max_audio_quality: AudioQuality::HiresLevel3,
+    volume_remote_control: false,
+    software_version: "0".to_owned(),
+});
 
 fn version(major: u32, minor: u32) -> QueueVersion {
     QueueVersion { major, minor }
 }
 
-async fn joined() -> (Session, Server, mpsc::Receiver<Server>) {
-    let (credentials, mut connections) = listen().await;
-    let mut session = Session::join(credentials, device()).await.unwrap();
-    let mut server = connections.recv().await.unwrap();
+async fn joined() -> (Session<'static>, Server, mpsc::Receiver<Server>) {
+    let (mut session, mut server, connections) = join(&DEVICE).await;
     frames(&mut server).await;
     messages(&mut server).await;
     let state = QConnectMessage {

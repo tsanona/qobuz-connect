@@ -1,5 +1,18 @@
+use std::sync::LazyLock;
+
 use qobuz_connect::proto::qconnect::{AudioQuality, DeviceType};
 use qobuz_connect::{Device, Discovery, Event, Session};
+
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
+    uuid: *b"qobuz-connect/la",
+    name: "fake renderer".to_owned(),
+    brand: "qobuz-connect".to_owned(),
+    model: "lan".to_owned(),
+    kind: DeviceType::Speaker,
+    max_audio_quality: AudioQuality::HiresLevel3,
+    volume_remote_control: true,
+    software_version: env!("CARGO_PKG_VERSION").to_owned(),
+});
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -8,8 +21,7 @@ async fn main() {
         .and_then(|port| port.parse().ok())
         .unwrap_or(0);
     let app_id = std::env::var("QOBUZ_APP_ID").unwrap_or_else(|_| "798273057".to_owned());
-    let device = device();
-    let (discovery, mut handovers) = match Discovery::start(&device, &app_id, port).await {
+    let (discovery, mut handovers) = match Discovery::start(&DEVICE, &app_id, port).await {
         Ok(started) => started,
         Err(err) => {
             eprintln!("{err}");
@@ -26,7 +38,7 @@ async fn main() {
     loop {
         println!("session {} handed over", handover.session_id);
         let become_active = handover.become_active;
-        let mut session = match Session::join(handover.credentials, device.clone()).await {
+        let mut session = match Session::join(handover.credentials, &DEVICE).await {
             Ok(session) => session,
             Err(err) => {
                 eprintln!("{err}");
@@ -52,18 +64,5 @@ async fn main() {
                 }
             }
         }
-    }
-}
-
-fn device() -> Device {
-    Device {
-        uuid: *b"qobuz-connect/la",
-        name: "fake renderer".to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "lan".to_owned(),
-        kind: DeviceType::Speaker,
-        max_audio_quality: AudioQuality::HiresLevel3,
-        volume_remote_control: true,
-        software_version: env!("CARGO_PKG_VERSION").to_owned(),
     }
 }
