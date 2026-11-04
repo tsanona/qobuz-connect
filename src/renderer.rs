@@ -15,7 +15,7 @@ use crate::wire::now_ms;
 const NONE: i32 = -1;
 
 /// Playback state of a renderer as reported to the session.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlayerState {
     pub playing: PlayingState,
     pub buffer: BufferState,
@@ -37,7 +37,7 @@ impl PlayerState {
         }
     }
 
-    fn to_proto(&self, queue_version: Option<QueueVersion>) -> QueueRendererState {
+    fn to_proto(self, queue_version: Option<QueueVersion>) -> QueueRendererState {
         QueueRendererState {
             playing_state: self.playing.into(),
             buffer_state: self.buffer.into(),
