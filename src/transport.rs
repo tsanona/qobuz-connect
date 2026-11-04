@@ -73,6 +73,7 @@ enum Outcome {
 }
 
 impl Transport {
+    // Todo connect should be source of code then connect with  uses it. this way connect can tate reference.
     /// Connects, authenticates and subscribes, then keeps the connection alive in a background task, reusing the token after a drop. The cloud serves one socket per token: two connections sharing a token evict each other.
     pub async fn connect(credentials: Credentials) -> Result<Self, Error> {
         Self::connect_with(move || {

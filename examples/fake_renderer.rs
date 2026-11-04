@@ -1,4 +1,5 @@
-use std::hash::{DefaultHasher, Hash as _, Hasher as _};
+include!("./common/mod.rs");
+
 use std::time::Duration;
 
 use qobuz_connect::proto::qconnect::{
@@ -23,7 +24,8 @@ async fn main() {
     let name = std::env::var("QOBUZ_CONNECT_NAME")
         .unwrap_or_else(|_| "qobuz-connect fake renderer".to_owned());
     let activate = std::env::var_os("QOBUZ_CONNECT_ACTIVATE").is_some();
-    let mut session = match Session::join(credentials, device(&name)).await {
+    let device = device(&name);
+    let mut session = match Session::join(credentials, &device).await {
         Ok(session) => session,
         Err(err) => {
             eprintln!("{err}");
@@ -147,15 +149,4 @@ fn device(name: &str) -> Device {
         volume_remote_control: true,
         software_version: env!("CARGO_PKG_VERSION").to_owned(),
     }
-}
-
-fn device_uuid(name: &str) -> [u8; 16] {
-    let mut uuid = [0; 16];
-    for (salt, half) in uuid.chunks_exact_mut(8).enumerate() {
-        let mut hasher = DefaultHasher::new();
-        name.hash(&mut hasher);
-        salt.hash(&mut hasher);
-        half.copy_from_slice(&hasher.finish().to_be_bytes());
-    }
-    uuid
 }

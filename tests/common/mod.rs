@@ -3,9 +3,9 @@
 use std::time::Duration;
 
 use futures_util::{SinkExt as _, StreamExt as _};
-use qobuz_connect::Credentials;
 use qobuz_connect::proto::qconnect::QConnectMessage;
 use qobuz_connect::wire::{self, Frame};
+use qobuz_connect::{Credentials, Device, Session};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
 use tokio::time::timeout;
@@ -31,6 +31,13 @@ pub async fn listen() -> (Credentials, mpsc::Receiver<Server>) {
         jwt: "jwt".to_owned(),
     };
     (credentials, receiver)
+}
+
+pub async fn join(device: &Device) -> (Session<'_>, Server, mpsc::Receiver<Server>) {
+    let (credentials, mut connections) = listen().await;
+    let session = Session::join(credentials, device).await.unwrap();
+    let server = connections.recv().await.unwrap();
+    (session, server, connections)
 }
 
 pub async fn frames(server: &mut Server) -> Vec<Frame> {

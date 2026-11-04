@@ -1,23 +1,23 @@
 #![cfg(feature = "discovery")]
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
+use std::sync::LazyLock;
+
 use qobuz_connect::proto::qconnect::{AudioQuality, DeviceType};
 use qobuz_connect::{Device, Discovery};
 use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 use tokio::net::TcpStream;
 
-fn device() -> Device {
-    Device {
-        uuid: [7; 16],
-        name: "test renderer".to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "test".to_owned(),
-        kind: DeviceType::Speaker,
-        max_audio_quality: AudioQuality::HiresLevel1,
-        volume_remote_control: true,
-        software_version: "0".to_owned(),
-    }
-}
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
+    uuid: [7; 16],
+    name: "test renderer".to_owned(),
+    brand: "qobuz-connect".to_owned(),
+    model: "test".to_owned(),
+    kind: DeviceType::Speaker,
+    max_audio_quality: AudioQuality::HiresLevel1,
+    volume_remote_control: true,
+    software_version: "0".to_owned(),
+});
 
 async fn call(port: u16, request: String) -> (String, serde_json::Value) {
     let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
@@ -37,7 +37,7 @@ fn get(route: &str) -> String {
 
 #[tokio::test]
 async fn describes_the_device_and_takes_a_handover() {
-    let (discovery, mut handovers) = Discovery::start(&device(), "123", 0).await.unwrap();
+    let (discovery, mut handovers) = Discovery::start(&DEVICE, "123", 0).await.unwrap();
     let port = discovery.port();
 
     let (status, info) = call(port, get("get-display-info")).await;

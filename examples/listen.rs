@@ -1,4 +1,4 @@
-use std::hash::{DefaultHasher, Hash as _, Hasher as _};
+include!("./common/mod.rs");
 
 use qobuz_connect::proto::qconnect::{
     AudioQuality, CtrlSrvrJoinSession, DeviceCapabilities, DeviceInfo, DeviceType, MessageType,
@@ -51,7 +51,7 @@ fn join(name: &str) -> QConnectMessage {
         ctrl_srvr_join_session: Some(CtrlSrvrJoinSession {
             session_uuid: None,
             device_info: Some(DeviceInfo {
-                device_uuid: device_uuid(name),
+                device_uuid: device_uuid(name).to_vec(),
                 friendly_name: name.to_owned(),
                 brand: "qobuz-connect".to_owned(),
                 model: "listen example".to_owned(),
@@ -67,15 +67,4 @@ fn join(name: &str) -> QConnectMessage {
         }),
         ..Default::default()
     }
-}
-
-fn device_uuid(name: &str) -> Vec<u8> {
-    let mut uuid = Vec::with_capacity(16);
-    for salt in 0_u8..2 {
-        let mut hasher = DefaultHasher::new();
-        name.hash(&mut hasher);
-        salt.hash(&mut hasher);
-        uuid.extend_from_slice(&hasher.finish().to_be_bytes());
-    }
-    uuid
 }

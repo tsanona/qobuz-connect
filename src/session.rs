@@ -21,9 +21,9 @@ use crate::transport::{self, Credentials, Transport};
 const UNANSWERED: Duration = Duration::from_secs(10);
 
 /// A joined session. Dropping it leaves the session.
-pub struct Session {
+pub struct Session<'a> {
     transport: Transport,
-    device: Device,
+    device: &'a Device,
     renderer_id: Option<i32>,
     uuid: Vec<u8>,
     queue_version: Option<QueueVersion>,
@@ -32,9 +32,9 @@ pub struct Session {
     action: Option<(Vec<u8>, Instant)>,
 }
 
-impl Session {
+impl<'a> Session<'a> {
     /// Connects and joins the session of the account behind the credentials, reusing the token after a drop; the cloud serves one socket per token, so two sessions sharing a token evict each other.
-    pub async fn join(credentials: Credentials, device: Device) -> Result<Self, Error> {
+    pub async fn join(credentials: Credentials, device: &'a Device) -> Result<Self, Error> {
         let span = tracing::info_span!("qobuz_connect", device = %device.name);
         Self::joined(
             Transport::connect(credentials).instrument(span).await?,
@@ -43,7 +43,7 @@ impl Session {
     }
 
     /// Like `join`, with a token minted by `source` before every connection; see `Transport::connect_with`.
-    pub async fn join_with<S, F>(source: S, device: Device) -> Result<Self, Error>
+    pub async fn join_with<S, F>(source: S, device: &'a Device) -> Result<Self, Error>
     where
         S: FnMut() -> F + Send + 'static,
         F: Future<Output = Result<Credentials, Error>> + Send + 'static,
@@ -55,7 +55,7 @@ impl Session {
         )
     }
 
-    fn joined(transport: Transport, device: Device) -> Result<Self, Error> {
+    fn joined(transport: Transport, device: &'a Device) -> Result<Self, Error> {
         let session = Self {
             transport,
             device,
@@ -131,7 +131,7 @@ impl Session {
 
     #[must_use]
     pub fn device(&self) -> &Device {
-        &self.device
+        self.device
     }
 
     /// The renderer id the server gave this device, once registered.

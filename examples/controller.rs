@@ -1,10 +1,24 @@
-use std::hash::{DefaultHasher, Hash as _, Hasher as _};
+include!("./common/mod.rs");
+
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use qobuz_connect::proto::qconnect::{AudioQuality, DeviceType, PlayingState};
 use qobuz_connect::{
     Autoplay, ControllerCommand, Credentials, Device, Event, QueueEvent, RendererEvent, Session,
 };
+
+const NAME: &str = "qobuz-connect controller";
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
+    uuid: device_uuid(NAME),
+    name: NAME.to_owned(),
+    brand: "qobuz-connect".to_owned(),
+    model: "controller example".to_owned(),
+    kind: DeviceType::Computer,
+    max_audio_quality: AudioQuality::HiresLevel3,
+    volume_remote_control: false,
+    software_version: env!("CARGO_PKG_VERSION").to_owned(),
+});
 
 struct Controller {
     renderer: Option<i32>,
@@ -25,7 +39,9 @@ async fn main() {
     }
     let wanted =
         std::env::var("QOBUZ_CONNECT_RENDERER").unwrap_or_else(|_| "fake renderer".to_owned());
-    let mut session = match Session::join(credentials, device()).await {
+
+    let mut session = match Session::join(credentials, &DEVICE).await {
+        //TODO let else
         Ok(session) => session,
         Err(err) => {
             eprintln!("{err}");
@@ -33,6 +49,7 @@ async fn main() {
         }
     };
     let mut controller = Controller {
+        //TODO controller should include session?
         renderer: None,
         items: Vec::new(),
         step: 0,
@@ -59,6 +76,7 @@ async fn main() {
     }
 }
 
+//TODO is controller method
 fn handle(
     session: &mut Session,
     controller: &mut Controller,
@@ -144,29 +162,4 @@ fn tracks() -> Vec<u32> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-fn device() -> Device {
-    let name = "qobuz-connect controller";
-    Device {
-        uuid: device_uuid(name),
-        name: name.to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "controller example".to_owned(),
-        kind: DeviceType::Computer,
-        max_audio_quality: AudioQuality::HiresLevel3,
-        volume_remote_control: false,
-        software_version: env!("CARGO_PKG_VERSION").to_owned(),
-    }
-}
-
-fn device_uuid(name: &str) -> [u8; 16] {
-    let mut uuid = [0; 16];
-    for (salt, half) in uuid.chunks_exact_mut(8).enumerate() {
-        let mut hasher = DefaultHasher::new();
-        name.hash(&mut hasher);
-        salt.hash(&mut hasher);
-        half.copy_from_slice(&hasher.finish().to_be_bytes());
-    }
-    uuid
 }
