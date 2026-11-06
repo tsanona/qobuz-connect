@@ -225,7 +225,7 @@ fn renderer_event(kind: MessageType, message: &QConnectMessage) -> Option<Render
             .map(|u| RendererEvent::StateUpdated {
                 id: u.renderer_id,
                 status: u.status(),
-                state: u.player_state.as_ref().map(PlayerState::from_proto),
+                state: u.player_state.map(PlayerState::from),
             }),
         MessageType::SrvrCtrlVolumeChanged => {
             message
