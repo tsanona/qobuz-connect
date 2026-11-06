@@ -25,19 +25,21 @@ pub struct PlayerState {
     pub next_queue_item_id: Option<i32>,
 }
 
-impl PlayerState {
-    pub(crate) fn from_proto(state: &RendererState) -> Self {
+impl From<RendererState> for PlayerState {
+    fn from(value: RendererState) -> Self {
         Self {
-            playing: state.playing_state(),
-            buffer: state.buffer_state(),
-            position: millis_to_duration(state.current_position.as_ref().map_or(0, |p| p.value)),
-            duration: millis_to_duration(state.duration),
-            current_queue_item_id: state.current_queue_item_id(),
+            playing: value.playing_state(),
+            buffer: value.buffer_state(),
+            position: millis_to_duration(value.current_position.as_ref().map_or(0, |p| p.value)),
+            duration: millis_to_duration(value.duration),
+            current_queue_item_id: value.current_queue_item_id(),
             next_queue_item_id: None,
         }
     }
+}
 
-    fn to_proto(self, queue_version: Option<QueueVersion>) -> QueueRendererState {
+impl PlayerState {
+    fn to_queue_renderer_state(self, queue_version: Option<QueueVersion>) -> QueueRendererState {
         QueueRendererState {
             playing_state: self.playing.into(),
             buffer_state: self.buffer.into(),
@@ -159,7 +161,7 @@ impl RendererReport {
         let kind = match self {
             Self::State(state) => {
                 message.rndr_srvr_state_updated = Some(RndrSrvrStateUpdated {
-                    state: Some(state.to_proto(queue_version)),
+                    state: Some(state.to_queue_renderer_state(queue_version)),
                 });
                 MessageType::RndrSrvrStateUpdated
             }
@@ -265,7 +267,7 @@ mod tests {
             current_queue_item_id: None,
             next_queue_item_id: Some(4),
         };
-        let proto = state.to_proto(Some(QueueVersion { major: 1, minor: 2 }));
+        let proto = state.to_queue_renderer_state(Some(QueueVersion { major: 1, minor: 2 }));
         assert_eq!(proto.current_queue_item_id, -1);
         assert_eq!(proto.next_queue_item_id, 4);
         assert_eq!(proto.current_position.map(|p| p.value), Some(1500));
@@ -288,7 +290,7 @@ mod tests {
             duration: 1000,
             current_queue_item_id: -1,
         };
-        let state = PlayerState::from_proto(&proto);
+        let state = PlayerState::from(proto);
         assert_eq!(state.playing, PlayingState::Playing);
         assert_eq!(state.buffer, BufferState::Buffering);
         assert_eq!(state.position, Duration::from_millis(42));
