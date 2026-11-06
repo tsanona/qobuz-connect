@@ -209,7 +209,7 @@ impl RendererReport {
             }
             Self::Device(device) => {
                 message.rndr_srvr_device_info_updated = Some(RndrSrvrDeviceInfoUpdated {
-                    device_info: Some(device.to_proto()),
+                    device_info: Some(device.into()),
                 });
                 MessageType::RndrSrvrDeviceInfoUpdated
             }

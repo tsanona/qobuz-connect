@@ -15,42 +15,39 @@ pub struct Device {
     pub software_version: String,
 }
 
-impl Device {
-    pub(crate) fn to_proto(&self) -> DeviceInfo {
-        let volume_remote_control = if self.volume_remote_control {
-            VolumeRemoteControl::Allowed
-        } else {
-            VolumeRemoteControl::NotAllowed
-        };
+impl From<Device> for DeviceInfo {
+    fn from(value: Device) -> Self {
         DeviceInfo {
-            device_uuid: self.uuid.to_vec(),
-            friendly_name: self.name.clone(),
-            brand: self.brand.clone(),
-            model: self.model.clone(),
+            device_uuid: value.uuid.to_vec(),
+            friendly_name: value.name,
+            brand: value.brand,
+            model: value.model,
             serial_number: String::new(),
-            r#type: self.kind.into(),
+            r#type: value.kind.into(),
             capabilities: Some(DeviceCapabilities {
                 min_audio_quality: AudioQuality::Mp3.into(),
-                max_audio_quality: self.max_audio_quality.into(),
-                volume_remote_control: volume_remote_control.into(),
+                max_audio_quality: value.max_audio_quality.into(),
+                volume_remote_control: value.volume_remote_control.into(),
             }),
-            software_version: self.software_version.clone(),
+            software_version: value.software_version,
         }
     }
+}
 
-    pub(crate) fn from_proto(info: DeviceInfo) -> Self {
-        let kind = info.r#type();
-        let capabilities = info.capabilities.unwrap_or_default();
+impl From<DeviceInfo> for Device {
+    fn from(value: DeviceInfo) -> Self {
+        let kind = value.r#type();
+        let capabilities = value.capabilities.unwrap_or_default();
         Self {
-            uuid: info.device_uuid.try_into().unwrap_or_default(),
-            name: info.friendly_name,
-            brand: info.brand,
-            model: info.model,
+            uuid: value.device_uuid.try_into().unwrap_or_default(),
+            name: value.friendly_name,
+            brand: value.brand,
+            model: value.model,
             kind,
             max_audio_quality: capabilities.max_audio_quality(),
             volume_remote_control: capabilities.volume_remote_control()
                 == VolumeRemoteControl::Allowed,
-            software_version: info.software_version,
+            software_version: value.software_version,
         }
     }
 }
