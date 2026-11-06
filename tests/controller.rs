@@ -15,7 +15,7 @@ use qobuz_connect::{Autoplay, ControllerCommand, Device, Event, QueueEvent, Sess
 use tokio::sync::mpsc;
 
 static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: [3; 16],
+    uuid: uuid::Uuid::from_bytes([3; 16]),
     name: "test controller".to_owned(),
     brand: "qobuz-connect".to_owned(),
     model: "test".to_owned(),

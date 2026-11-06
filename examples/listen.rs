@@ -51,7 +51,7 @@ fn join(name: &str) -> QConnectMessage {
         ctrl_srvr_join_session: Some(CtrlSrvrJoinSession {
             session_uuid: None,
             device_info: Some(DeviceInfo {
-                device_uuid: device_uuid(name).to_vec(),
+                device_uuid: device_uuid(name).as_bytes().to_vec(),
                 friendly_name: name.to_owned(),
                 brand: "qobuz-connect".to_owned(),
                 model: "listen example".to_owned(),

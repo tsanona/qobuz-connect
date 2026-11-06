@@ -5,7 +5,7 @@ use crate::proto::qconnect::{
 /// How a device presents itself to a session.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Device {
-    pub uuid: [u8; 16],
+    pub uuid: uuid::Uuid,
     pub name: String,
     pub brand: String,
     pub model: String,
@@ -18,7 +18,7 @@ pub struct Device {
 impl From<Device> for DeviceInfo {
     fn from(value: Device) -> Self {
         DeviceInfo {
-            device_uuid: value.uuid.to_vec(),
+            device_uuid: value.uuid.as_bytes().to_vec(),
             friendly_name: value.name,
             brand: value.brand,
             model: value.model,
@@ -39,7 +39,7 @@ impl From<DeviceInfo> for Device {
         let kind = value.r#type();
         let capabilities = value.capabilities.unwrap_or_default();
         Self {
-            uuid: value.device_uuid.try_into().unwrap_or_default(),
+            uuid: uuid::Uuid::from_slice(&value.device_uuid).unwrap_or_default(),
             name: value.friendly_name,
             brand: value.brand,
             model: value.model,

@@ -4,7 +4,7 @@ use qobuz_connect::proto::qconnect::{AudioQuality, DeviceType};
 use qobuz_connect::{Device, Discovery, Event, Session};
 
 static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: *b"qobuz-connect/la",
+    uuid: uuid::Uuid::from_bytes(*b"qobuz-connect/la"),
     name: "fake renderer".to_owned(),
     brand: "qobuz-connect".to_owned(),
     model: "lan".to_owned(),

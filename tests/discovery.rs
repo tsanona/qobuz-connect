@@ -9,7 +9,7 @@ use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 use tokio::net::TcpStream;
 
 static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: [7; 16],
+    uuid: uuid::Uuid::from_bytes([7; 16]),
     name: "test renderer".to_owned(),
     brand: "qobuz-connect".to_owned(),
     model: "test".to_owned(),

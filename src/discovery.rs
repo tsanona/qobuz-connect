@@ -157,7 +157,7 @@ impl Drop for Discovery {
 }
 
 fn advertise(device: &Device, port: u16) -> Result<(ServiceDaemon, String), mdns_sd::Error> {
-    let uuid = uuid::Uuid::from_bytes(device.uuid).hyphenated().to_string();
+    let uuid = device.uuid.hyphenated().to_string();
     let properties = [
         ("path", format!("/devices/{uuid}")),
         ("type", kind_name(device.kind).to_owned()),
@@ -289,7 +289,7 @@ fn display(device: &Device) -> DisplayInfo {
         friendly_name: device.name.clone(),
         model_display_name: device.model.clone(),
         brand_display_name: device.brand.clone(),
-        serial_number: uuid::Uuid::from_bytes(device.uuid).hyphenated().to_string(),
+        serial_number: device.uuid.hyphenated().to_string(),
         max_audio_quality: quality_name(device.max_audio_quality),
     }
 }

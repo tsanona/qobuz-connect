@@ -1,6 +1,6 @@
 use std::hash::{DefaultHasher, Hash as _, Hasher as _};
 
-fn device_uuid(name: &str) -> [u8; 16] {
+fn device_uuid(name: &str) -> uuid::Uuid {
     let mut uuid = [0; 16];
     for (salt, half) in uuid.chunks_exact_mut(8).enumerate() {
         let mut hasher = DefaultHasher::new();
@@ -8,5 +8,5 @@ fn device_uuid(name: &str) -> [u8; 16] {
         salt.hash(&mut hasher);
         half.copy_from_slice(&hasher.finish().to_be_bytes());
     }
-    uuid
+    uuid::Uuid::from_bytes(uuid)
 }

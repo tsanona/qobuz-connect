@@ -163,7 +163,7 @@ impl<'a> Session<'a> {
             let ours = added
                 .device_info
                 .as_ref()
-                .is_some_and(|info| info.device_uuid == self.device.uuid);
+                .is_some_and(|info| info.device_uuid == self.device.uuid.as_bytes().to_vec());
             if ours {
                 self.renderer_id = Some(added.renderer_id);
                 return Event::Registered {

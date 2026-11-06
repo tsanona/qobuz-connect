@@ -18,7 +18,7 @@ use qobuz_connect::{
 use tokio::sync::mpsc;
 
 static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: [7; 16],
+    uuid: uuid::Uuid::from_bytes([7; 16]),
     name: "test renderer".to_owned(),
     brand: "qobuz-connect".to_owned(),
     model: "test".to_owned(),
@@ -34,7 +34,7 @@ fn add_renderer(renderer_id: i32, device: &Device) -> QConnectMessage {
         srvr_ctrl_add_renderer: Some(SrvrCtrlAddRenderer {
             renderer_id,
             device_info: Some(DeviceInfo {
-                device_uuid: device.uuid.to_vec(),
+                device_uuid: device.uuid.as_bytes().to_vec(),
                 friendly_name: device.name.clone(),
                 ..Default::default()
             }),
