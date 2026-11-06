@@ -3,7 +3,7 @@ include!("./common/mod.rs");
 use std::time::Duration;
 
 use qobuz_connect::proto::qconnect::{
-    AudioQuality, BufferState, DeviceType, NetworkType, PlayingState,
+    AudioQuality, BufferState, DeviceType, NetworkType, PlayingState, Position,
 };
 use qobuz_connect::{
     Credentials, Device, Event, PlayerState, RendererCommand, RendererReport, Session, StateChange,
@@ -36,7 +36,7 @@ async fn main() {
         state: PlayerState {
             playing: PlayingState::Stopped,
             buffer: BufferState::Ok,
-            position: Duration::ZERO,
+            position: Position::zero(),
             duration: Duration::from_secs(240),
             current_queue_item_id: None,
             next_queue_item_id: None,
@@ -56,7 +56,7 @@ async fn main() {
             }
             _ = ticker.tick() => {
                 if fake.state.playing == PlayingState::Playing {
-                    fake.state.position = fake.state.position.saturating_add(Duration::from_secs(1));
+                    fake.state.position = fake.state.position.tick(Duration::from_secs(1));
                     if session.report(RendererReport::State(fake.state)).is_err() {
                         return;
                     }
@@ -117,7 +117,7 @@ fn apply(state: &mut PlayerState, state_change: &StateChange) {
         }
         Some(track) if state.current_queue_item_id != Some(track.queue_item_id) => {
             state.current_queue_item_id = Some(track.queue_item_id);
-            state.position = state_change.position.unwrap_or(Duration::ZERO);
+            state.position = state_change.position.unwrap_or_else(Position::zero); //TODO: redefine default as now(0)
             state.playing = state_change.playing.unwrap_or(PlayingState::Playing);
         }
         _ => {

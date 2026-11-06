@@ -8,7 +8,7 @@ use tokio::time::Instant;
 use tracing::Instrument as _;
 
 use crate::Error;
-use crate::controller::{ControllerCommand, uuid};
+use crate::controller::ControllerCommand;
 use crate::device::Device;
 use crate::event::{self, Event, QueueEvent, RendererEvent};
 use crate::proto::qconnect::{
@@ -17,6 +17,7 @@ use crate::proto::qconnect::{
 };
 use crate::renderer::{RendererCommand, RendererReport};
 use crate::transport::{self, Credentials, Transport};
+use crate::uuid;
 
 const UNANSWERED: Duration = Duration::from_secs(10);
 

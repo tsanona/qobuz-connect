@@ -1,10 +1,9 @@
 //! Frames of the Qobuz cloud socket. A WebSocket message carries one or more frames, each a varint kind, a varint length and a protobuf body.
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use prost::Message as _;
 use prost::encoding::{decode_varint, encode_varint};
 
+use crate::now_ms;
 use crate::proto::qcloud::{
     Authenticate, Disconnect, MessageType, Payload, Subscribe, Unsubscribe,
 };
@@ -129,14 +128,6 @@ pub fn payload(msg_id: u32, batch_id: i32, messages: Vec<QConnectMessage>) -> Fr
 /// Unpacks the Qobuz Connect messages carried by a payload frame.
 pub fn messages(payload: &Payload) -> Result<Vec<QConnectMessage>, prost::DecodeError> {
     QConnectBatch::decode(payload.payload.as_slice()).map(|batch| batch.messages)
-}
-
-pub(crate) fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |elapsed| {
-            u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)
-        })
 }
 
 #[cfg(test)]

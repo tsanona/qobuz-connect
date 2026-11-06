@@ -3,7 +3,8 @@
 
 pub mod qcloud;
 pub mod qconnect {
-    use crate::wire::now_ms;
+    use crate::now_ms;
+    use std::time::Duration;
 
     include!("qconnect.rs");
 
@@ -14,6 +15,16 @@ pub mod qconnect {
                 value,
                 timestamp: now_ms(),
             }
+        }
+
+        /// Creates a new `Position ` at current timestamp.
+        pub fn zero() -> Self {
+            Self::now(0)
+        }
+
+        /// Advances `Position` by period
+        pub fn tick(self, period: Duration) -> Self {
+            Self::now(self.value.saturating_add(period.as_millis() as u32))
         }
     }
 

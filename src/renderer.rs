@@ -10,7 +10,6 @@ use crate::proto::qconnect::{
     RndrSrvrFileAudioQualityChanged, RndrSrvrMaxAudioQualityChanged, RndrSrvrRendererAction,
     RndrSrvrStateUpdated, RndrSrvrVolumeChanged, RndrSrvrVolumeMuted,
 };
-use crate::wire::now_ms;
 
 const NONE: i32 = -1;
 
@@ -19,7 +18,7 @@ const NONE: i32 = -1;
 pub struct PlayerState {
     pub playing: PlayingState,
     pub buffer: BufferState,
-    pub position: Duration,
+    pub position: Position,
     pub duration: Duration,
     pub current_queue_item_id: Option<i32>,
     pub next_queue_item_id: Option<i32>,
@@ -30,7 +29,7 @@ impl From<RendererState> for PlayerState {
         Self {
             playing: value.playing_state(),
             buffer: value.buffer_state(),
-            position: millis_to_duration(value.current_position.as_ref().map_or(0, |p| p.value)),
+            position: value.current_position.unwrap_or(Position::now(0)),
             duration: millis_to_duration(value.duration),
             current_queue_item_id: value.current_queue_item_id(),
             next_queue_item_id: None,
@@ -43,10 +42,7 @@ impl PlayerState {
         QueueRendererState {
             playing_state: self.playing.into(),
             buffer_state: self.buffer.into(),
-            current_position: Some(Position {
-                timestamp: now_ms(),
-                value: millis(self.position),
-            }),
+            current_position: Some(self.position),
             duration: millis(self.duration),
             queue_version,
             current_queue_item_id: self.current_queue_item_id.unwrap_or(NONE),
@@ -60,7 +56,7 @@ impl PlayerState {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateChange {
     pub playing: Option<PlayingState>,
-    pub position: Option<Duration>,
+    pub position: Option<Position>,
     pub current: Option<QueueTrackRef>,
     pub next: Option<QueueTrackRef>,
 }
@@ -86,7 +82,7 @@ impl RendererCommand {
             MessageType::SrvrRndrSetState => message.srvr_rndr_set_state.as_ref().map(|s| {
                 Self::SetState(StateChange {
                     playing: playing(s.playing_state),
-                    position: s.current_position.map(millis_to_duration),
+                    position: s.current_position.map(Position::now),
                     current: s.current_track.clone(),
                     next: s.next_track.clone(),
                 })
@@ -259,19 +255,26 @@ mod tests {
 
     #[test]
     fn missing_items_are_reported_as_minus_one() {
+        let playing = PlayingState::Paused;
+        let buffer = BufferState::Ok;
+        let position = Position::now(1500);
+        let duration = Duration::from_secs(200);
+        let next_queue_item_id = 4;
         let state = PlayerState {
-            playing: PlayingState::Paused,
-            buffer: BufferState::Ok,
-            position: Duration::from_millis(1500),
-            duration: Duration::from_secs(200),
+            playing,
+            buffer,
+            position,
+            duration,
             current_queue_item_id: None,
-            next_queue_item_id: Some(4),
+            next_queue_item_id: Some(next_queue_item_id),
         };
         let proto = state.to_queue_renderer_state(Some(QueueVersion { major: 1, minor: 2 }));
+        assert_eq!(proto.playing_state, playing as i32);
+        assert_eq!(proto.buffer_state, buffer as i32);
+        assert_eq!(proto.current_position, Some(position));
+        assert_eq!(proto.duration, duration.as_millis() as u32);
         assert_eq!(proto.current_queue_item_id, -1);
-        assert_eq!(proto.next_queue_item_id, 4);
-        assert_eq!(proto.current_position.map(|p| p.value), Some(1500));
-        assert_eq!(proto.duration, 200_000);
+        assert_eq!(proto.next_queue_item_id, next_queue_item_id);
         assert_eq!(
             proto.queue_version,
             Some(QueueVersion { major: 1, minor: 2 })
@@ -280,20 +283,18 @@ mod tests {
 
     #[test]
     fn controller_view_of_a_renderer_state_round_trips() {
+        let position = Position::now(42);
         let proto = RendererState {
             playing_state: PlayingState::Playing.into(),
             buffer_state: BufferState::Buffering.into(),
-            current_position: Some(Position {
-                timestamp: 1,
-                value: 42,
-            }),
+            current_position: Some(position),
             duration: 1000,
             current_queue_item_id: -1,
         };
         let state = PlayerState::from(proto);
         assert_eq!(state.playing, PlayingState::Playing);
         assert_eq!(state.buffer, BufferState::Buffering);
-        assert_eq!(state.position, Duration::from_millis(42));
+        assert_eq!(state.position, position);
         assert_eq!(state.current_queue_item_id, None);
     }
 

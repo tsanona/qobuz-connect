@@ -11,6 +11,7 @@ use crate::proto::qconnect::{
     LoopMode, MessageType, PlayingState, QConnectMessage, QueueItemRef, QueueVersion, TrackRef,
 };
 use crate::renderer::millis;
+use crate::uuid;
 
 /// Hints about the autoplay tracks that follow the queue: `reset` drops them, `loading` announces that new ones are on their way.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -341,10 +342,6 @@ impl ControllerCommand {
         message.message_type = kind.into();
         message
     }
-}
-
-pub(crate) fn uuid() -> Vec<u8> {
-    uuid::Uuid::new_v4().into_bytes().to_vec()
 }
 
 #[cfg(test)]
