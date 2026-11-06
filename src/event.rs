@@ -197,7 +197,7 @@ fn renderer_event(kind: MessageType, message: &QConnectMessage) -> Option<Render
                 .as_ref()
                 .map(|r| RendererEvent::Added {
                     id: r.renderer_id,
-                    device: Device::from_proto(r.device_info.clone().unwrap_or_default()),
+                    device: Device::from(r.device_info.clone().unwrap_or_default()),
                 })
         }
         MessageType::SrvrCtrlUpdateRenderer => {
@@ -206,7 +206,7 @@ fn renderer_event(kind: MessageType, message: &QConnectMessage) -> Option<Render
                 .as_ref()
                 .map(|r| RendererEvent::Updated {
                     id: r.renderer_id,
-                    device: Device::from_proto(r.device_info.clone().unwrap_or_default()),
+                    device: Device::from(r.device_info.clone().unwrap_or_default()),
                 })
         }
         MessageType::SrvrCtrlRemoveRenderer => message

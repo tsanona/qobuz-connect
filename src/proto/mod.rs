@@ -18,6 +18,16 @@ pub mod qconnect {
         }
     }
 
+    impl From<bool> for VolumeRemoteControl {
+        fn from(value: bool) -> Self {
+            if value {
+                VolumeRemoteControl::Allowed
+            } else {
+                VolumeRemoteControl::NotAllowed
+            }
+        }
+    }
+
     macro_rules! implment_otional_id {
         ($(($type:ident, $field:ident)),* $(,)?) => {
             $(

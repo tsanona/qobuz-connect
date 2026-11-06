@@ -242,7 +242,7 @@ impl<'a> Session<'a> {
             message_type: MessageType::CtrlSrvrJoinSession.into(),
             ctrl_srvr_join_session: Some(CtrlSrvrJoinSession {
                 session_uuid: (!self.uuid.is_empty()).then(|| self.uuid.clone()),
-                device_info: Some(self.device.to_proto()),
+                device_info: Some(self.device.clone().into()),
             }),
             ..Default::default()
         })
