@@ -1,10 +1,8 @@
-include!("./common/mod.rs");
-
 use qobuz_connect::proto::qconnect::{
-    AudioQuality, CtrlSrvrJoinSession, DeviceCapabilities, DeviceInfo, DeviceType, MessageType,
-    QConnectMessage, VolumeRemoteControl,
+    AudioQuality, CtrlSrvrJoinSession, DeviceType, MessageType,
+    QConnectMessage,
 };
-use qobuz_connect::{Credentials, Transport, TransportEvent};
+use qobuz_connect::{Credentials, Device, Transport, TransportEvent};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -21,7 +19,7 @@ async fn main() {
             return;
         }
     };
-    if transport.send(vec![join(&name)]).is_err() {
+    if transport.send(vec![join_message(&name)]).is_err() {
         return;
     }
     while let Some(event) = transport.recv().await {
@@ -30,7 +28,7 @@ async fn main() {
             TransportEvent::Disconnected => println!("disconnected"),
             TransportEvent::Reconnected => {
                 println!("reconnected");
-                if transport.send(vec![join(&name)]).is_err() {
+                if transport.send(vec![join_message(&name)]).is_err() {
                     return;
                 }
             }
@@ -45,25 +43,19 @@ fn credentials() -> Option<Credentials> {
     })
 }
 
-fn join(name: &str) -> QConnectMessage {
+fn join_message(name: &str) -> QConnectMessage {
+    let device = Device::new(
+        name, 
+        DeviceType::Computer, 
+        AudioQuality::HiresLevel3, 
+        true
+    ).with_model("listen example");
+    
     QConnectMessage {
         message_type: MessageType::CtrlSrvrJoinSession.into(),
         ctrl_srvr_join_session: Some(CtrlSrvrJoinSession {
             session_uuid: None,
-            device_info: Some(DeviceInfo {
-                device_uuid: device_uuid(name).as_bytes().to_vec(),
-                friendly_name: name.to_owned(),
-                brand: "qobuz-connect".to_owned(),
-                model: "listen example".to_owned(),
-                serial_number: String::new(),
-                r#type: DeviceType::Computer.into(),
-                capabilities: Some(DeviceCapabilities {
-                    min_audio_quality: AudioQuality::Mp3.into(),
-                    max_audio_quality: AudioQuality::HiresLevel3.into(),
-                    volume_remote_control: VolumeRemoteControl::Allowed.into(),
-                }),
-                software_version: env!("CARGO_PKG_VERSION").to_owned(),
-            }),
+            device_info: Some(device.into()),
         }),
         ..Default::default()
     }

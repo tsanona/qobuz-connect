@@ -14,16 +14,12 @@ use qobuz_connect::proto::qconnect::{
 use qobuz_connect::{Autoplay, ControllerCommand, Device, Event, QueueEvent, Session};
 use tokio::sync::mpsc;
 
-static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: uuid::Uuid::from_bytes([3; 16]),
-    name: "test controller".to_owned(),
-    brand: "qobuz-connect".to_owned(),
-    model: "test".to_owned(),
-    kind: DeviceType::Computer,
-    max_audio_quality: AudioQuality::HiresLevel3,
-    volume_remote_control: false,
-    software_version: "0".to_owned(),
-});
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device::new(
+    "test controller",
+    DeviceType::Computer,
+    AudioQuality::HiresLevel3, 
+    false
+).with_uuid(uuid::Uuid::from_bytes([3; 16])).with_model("test"));
 
 fn version(major: u32, minor: u32) -> QueueVersion {
     QueueVersion { major, minor }

@@ -8,16 +8,12 @@ use qobuz_connect::{Device, Discovery};
 use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 use tokio::net::TcpStream;
 
-static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: uuid::Uuid::from_bytes([7; 16]),
-    name: "test renderer".to_owned(),
-    brand: "qobuz-connect".to_owned(),
-    model: "test".to_owned(),
-    kind: DeviceType::Speaker,
-    max_audio_quality: AudioQuality::HiresLevel1,
-    volume_remote_control: true,
-    software_version: "0".to_owned(),
-});
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device::new(
+    "test renderer",
+    DeviceType::Speaker,
+    AudioQuality::HiresLevel1, 
+    true
+).with_uuid(uuid::Uuid::from_bytes([7; 16])).with_model("test"));
 
 async fn call(port: u16, request: String) -> (String, serde_json::Value) {
     let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();

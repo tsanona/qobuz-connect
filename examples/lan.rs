@@ -3,16 +3,12 @@ use std::sync::LazyLock;
 use qobuz_connect::proto::qconnect::{AudioQuality, DeviceType};
 use qobuz_connect::{Device, Discovery, Event, Session};
 
-static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: uuid::Uuid::from_bytes(*b"qobuz-connect/la"),
-    name: "fake renderer".to_owned(),
-    brand: "qobuz-connect".to_owned(),
-    model: "lan".to_owned(),
-    kind: DeviceType::Speaker,
-    max_audio_quality: AudioQuality::HiresLevel3,
-    volume_remote_control: true,
-    software_version: env!("CARGO_PKG_VERSION").to_owned(),
-});
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device::new(
+    "qobuz-connect lan",
+    DeviceType::Speaker,
+    AudioQuality::HiresLevel3, 
+    true
+).with_uuid(uuid::Uuid::from_bytes(*b"qobuz-connect/la")).with_model("lan example"));
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {

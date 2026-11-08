@@ -1,5 +1,3 @@
-include!("./common/mod.rs");
-
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -8,17 +6,12 @@ use qobuz_connect::{
     Autoplay, ControllerCommand, Credentials, Device, Event, QueueEvent, RendererEvent, Session,
 };
 
-const NAME: &str = "qobuz-connect controller";
-static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: device_uuid(NAME),
-    name: NAME.to_owned(),
-    brand: "qobuz-connect".to_owned(),
-    model: "controller example".to_owned(),
-    kind: DeviceType::Computer,
-    max_audio_quality: AudioQuality::HiresLevel3,
-    volume_remote_control: false,
-    software_version: env!("CARGO_PKG_VERSION").to_owned(),
-});
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device::new(
+    "qobuz-connect controller",
+    DeviceType::Computer,
+    AudioQuality::HiresLevel3, 
+    false
+).with_model("controller example"));
 
 struct Controller {
     renderer: Option<i32>,

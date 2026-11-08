@@ -1,5 +1,3 @@
-include!("./common/mod.rs");
-
 use std::time::Duration;
 
 use qobuz_connect::proto::qconnect::{
@@ -24,7 +22,12 @@ async fn main() {
     let name = std::env::var("QOBUZ_CONNECT_NAME")
         .unwrap_or_else(|_| "qobuz-connect fake renderer".to_owned());
     let activate = std::env::var_os("QOBUZ_CONNECT_ACTIVATE").is_some();
-    let device = device(&name);
+    let device = Device::new(
+        name,
+        DeviceType::Speaker,
+        AudioQuality::HiresLevel3, 
+        true
+    ).with_model("fake renderer example");
     let mut session = match Session::join(credentials, &device).await {
         Ok(session) => session,
         Err(err) => {
@@ -136,17 +139,4 @@ fn credentials() -> Option<Credentials> {
         endpoint: std::env::var("QOBUZ_CONNECT_ENDPOINT").ok()?,
         jwt: std::env::var("QOBUZ_CONNECT_JWT").ok()?,
     })
-}
-
-fn device(name: &str) -> Device {
-    Device {
-        uuid: device_uuid(name),
-        name: name.to_owned(),
-        brand: "qobuz-connect".to_owned(),
-        model: "fake renderer".to_owned(),
-        kind: DeviceType::Speaker,
-        max_audio_quality: AudioQuality::HiresLevel3,
-        volume_remote_control: true,
-        software_version: env!("CARGO_PKG_VERSION").to_owned(),
-    }
 }

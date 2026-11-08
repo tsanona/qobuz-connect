@@ -109,11 +109,11 @@ pub fn subscribe(msg_id: u32) -> Frame {
 
 /// Wraps Qobuz Connect messages into a payload frame addressed to the backend.
 #[must_use]
-pub fn payload(msg_id: u32, batch_id: i32, messages: Vec<QConnectMessage>) -> Frame {
+pub fn payload(msg_id: u32, batch_id: i32, messages: impl Into<Vec<QConnectMessage>>) -> Frame {
     let batch = QConnectBatch {
         messages_time: now_ms(),
         messages_id: batch_id,
-        messages,
+        messages: messages.into(),
     };
     Frame::Payload(Payload {
         msg_id,

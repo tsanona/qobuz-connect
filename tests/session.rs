@@ -17,16 +17,12 @@ use qobuz_connect::{
 };
 use tokio::sync::mpsc;
 
-static DEVICE: LazyLock<Device> = LazyLock::new(|| Device {
-    uuid: uuid::Uuid::from_bytes([7; 16]),
-    name: "test renderer".to_owned(),
-    brand: "qobuz-connect".to_owned(),
-    model: "test".to_owned(),
-    kind: DeviceType::Speaker,
-    max_audio_quality: AudioQuality::HiresLevel3,
-    volume_remote_control: true,
-    software_version: "0".to_owned(),
-});
+static DEVICE: LazyLock<Device> = LazyLock::new(|| Device::new(
+    "test renderer",
+    DeviceType::Speaker,
+    AudioQuality::HiresLevel3, 
+    true
+).with_uuid(uuid::Uuid::from_bytes([7; 16])).with_model("test"));
 
 fn add_renderer(renderer_id: i32, device: &Device) -> QConnectMessage {
     QConnectMessage {
